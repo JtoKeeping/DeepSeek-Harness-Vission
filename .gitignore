@@ -1,0 +1,11 @@
+# Dependencies / build outputs
+node_modules/
+*.zip
+
+# Local test & scratch
+test-*.mjs
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
