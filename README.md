@@ -1,4 +1,4 @@
-# DeepSeek-Harness-Vission —给deepseek装上眼睛
+# DeepSeek-Harness-Vision —给deepseek装上眼睛
 
 给 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh web`）的纯文本模型（如 `deepseek-v4-flash`）补上"识图"能力：
 
