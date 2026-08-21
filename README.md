@@ -124,8 +124,13 @@ config:
 - **识别失败/超时**：Ollama 模式下确认 `ollama serve` 在运行且已 `ollama pull qwen3-vl:8b`；
   API 模式下检查 `baseUrl`/`apiKey`/网络。首次识别受模型冷启动影响可能较慢（10–60s）。
 - **升级 dsh 后失效**：补丁会被还原，重跑 `reapply-dsh-patches.ps1` 即可（或重跑安装脚本）。
-- **版本兼容**：补丁按 `@deepseek-ai/dsh` 0.1.0-rc.x 制作；版本差异过大时重打脚本会提示
-  需人工核对。
+- **版本兼容**：支持 `@deepseek-ai/dsh` 0.1.0-rc.x（旧版多包布局，补丁直接打在适配器上）
+  与 0.1.1-rc.x（新版单包/配置声明布局：模型能力在 `~/.dsh/settings.yaml` 的
+  `llm-deepseek.models[].inputModalities` 中声明，安装脚本会自动写入）。重打脚本
+  会自动检测版本并打对应补丁；版本差异过大时会提示需人工核对。
+- **新版可选的官方视觉模型**：dsh 0.1.1-rc.x 起模型目录含 `deepseek-v4-flash-vision-exp`
+  （DeepSeek 官方实验视觉模型）。若你的账号可用它，直接在模型选择器中切换即可原生识图，
+  无需本插件；本插件则让 `deepseek-v4-flash` 也能识图。
 
 ## License
 

@@ -17,13 +17,13 @@ if (-not $DshHome) {
 $profileDir = Join-Path $DshHome (Join-Path 'profiles' $ProfileName)
 $pluginDir = Join-Path $profileDir 'plugins'
 
-Write-Host "== 1/4 install plugin files =="
+Write-Host "== 1/5 install plugin files =="
 New-Item -ItemType Directory -Force -Path $pluginDir | Out-Null
 Copy-Item -Force (Join-Path $PSScriptRoot 'plugins\local-vision.mjs') (Join-Path $pluginDir 'local-vision.mjs')
 Copy-Item -Force (Join-Path $PSScriptRoot 'plugins\reapply-dsh-patches.ps1') (Join-Path $pluginDir 'reapply-dsh-patches.ps1')
 Write-Host "plugin -> $pluginDir\local-vision.mjs"
 
-Write-Host "== 2/4 register plugin in the profile patch layer =="
+Write-Host "== 2/5 register plugin in the profile patch layer =="
 New-Item -ItemType Directory -Force -Path $profileDir | Out-Null
 $patchFile = Join-Path $profileDir 'cordis.patch.yml'
 if (-not (Test-Path -LiteralPath $patchFile)) {
@@ -59,14 +59,55 @@ if ($patch -match 'local-vision') {
   Write-Host "entry appended to $patchFile"
 }
 
-Write-Host "== 3/4 install the skill =="
+Write-Host "== 3/5 install the skill =="
 $skillRoot = Join-Path $DshHome 'skills'
 New-Item -ItemType Directory -Force -Path $skillRoot | Out-Null
 $skillSrc = Join-Path $PSScriptRoot 'skills\local-vision'
 Copy-Item -Recurse -Force $skillSrc (Join-Path $skillRoot 'local-vision')
 Write-Host "skill -> $skillRoot\local-vision"
 
-Write-Host "== 4/4 apply the dsh-llm-deepseek adapter patches =="
+Write-Host "== 4/5 declare image capability in settings.yaml (new 0.1.1-rc.x layout) =="
+$profileNodeModules = Join-Path $DshHome 'profiles\node_modules\@deepseek-ai\dsh-llm-deepseek'
+if (Test-Path $profileNodeModules) {
+  $settingsFile = Join-Path $DshHome 'settings.yaml'
+  if (-not (Test-Path -LiteralPath $settingsFile)) {
+    Set-Content -LiteralPath $settingsFile -Value "# dsh settings" -Encoding UTF8
+  }
+  $s = Get-Content -LiteralPath $settingsFile -Raw
+  if ($s -match 'llm-deepseek:') {
+    Write-Host 'llm-deepseek section already present; skipped.'
+  } else {
+    $section = @'
+
+# local-vision: declare image input for deepseek-v4-flash so image uploads are
+# admitted; the local-vision plugin performs the actual recognition per request
+# (images are replaced with recognition text and never reach the DeepSeek API)
+llm-deepseek:
+  models:
+    - id: deepseek-v4-flash
+      name: DeepSeek-V4-Flash
+      contextWindow: 1000000
+      maxTokens: 256000
+      inputModalities: [text, image]
+    - id: deepseek-v4-pro
+      name: DeepSeek-V4-Pro
+      contextWindow: 1000000
+      maxTokens: 256000
+      inputModalities: [text]
+    - id: deepseek-v4-flash-vision-exp
+      name: DeepSeek-V4-Flash-Vision-Exp
+      contextWindow: 1000000
+      maxTokens: 256000
+      inputModalities: [text, image]
+'@
+    Add-Content -LiteralPath $settingsFile -Value $section -Encoding UTF8
+    Write-Host "llm-deepseek section appended to $settingsFile"
+  }
+} else {
+  Write-Host 'old layout detected; model capability is patched in the adapter instead - skipped.'
+}
+
+Write-Host "== 5/5 apply the dsh-llm-deepseek adapter patches =="
 & (Join-Path $pluginDir 'reapply-dsh-patches.ps1')
 
 Write-Host ''
